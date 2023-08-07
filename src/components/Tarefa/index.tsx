@@ -1,15 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 
 import * as S from './styles'
-import { remover } from '../../store/reducers/tarefas'
+import { remover, editar } from '../../store/reducers/tarefas'
 import TarefaClass from '../../models/Tarefa'
 
 type Props = TarefaClass
 
-const Tarefa = ({ titulo, prioridade, status, descricao, id }: Props) => {
+const Tarefa = ({
+  titulo,
+  prioridade,
+  status,
+  descricao: descricaoOriginal,
+  id
+}: Props) => {
   const dispatch = useDispatch()
   const [estaEditando, setEstaEditando] = useState(false)
+  const [descricao, setDescricao] = useState('')
+
+  useEffect(() => {
+    if (descricaoOriginal.length > 0) setDescricao(descricaoOriginal)
+  }, [descricaoOriginal])
+
+  function cancelarEdicao() {
+    setEstaEditando(false)
+    setDescricao(descricaoOriginal)
+  }
+
+  function salvarEdicao() {
+    dispatch(
+      editar({
+        descricao,
+        titulo,
+        prioridade,
+        id,
+        status
+      })
+    )
+    setEstaEditando(false)
+  }
 
   return (
     <S.Card>
@@ -20,12 +49,16 @@ const Tarefa = ({ titulo, prioridade, status, descricao, id }: Props) => {
       <S.Tag status={status} parametro="status">
         {status}
       </S.Tag>
-      <S.Descricao value={descricao} />
+      <S.Descricao
+        disabled={!estaEditando}
+        value={descricao}
+        onChange={({ target }) => setDescricao(target.value)}
+      />
       <S.BarraAcoes>
         {estaEditando ? (
           <>
-            <S.BotaoSalvar>Salvar</S.BotaoSalvar>
-            <S.BotaoCancelarRemover onClick={() => setEstaEditando(false)}>
+            <S.BotaoSalvar onClick={salvarEdicao}>Salvar</S.BotaoSalvar>
+            <S.BotaoCancelarRemover onClick={cancelarEdicao}>
               Cancelar
             </S.BotaoCancelarRemover>
           </>
